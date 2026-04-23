@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>Polymarket Copy Trader</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg: #0b0f17;
+    --panel: #141a26;
+    --border: #1f2937;
+    --fg: #e5e7eb;
+    --muted: #9ca3af;
+    --green: #22c55e;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --blue: #3b82f6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: ui-sans-serif, system-ui, sans-serif; background: var(--bg); color: var(--fg); font-size: 14px; }
+  header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  h1 { margin: 0; font-size: 18px; font-weight: 600; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; margin-left: 6px; }
+  .pill.ok { background: rgba(34,197,94,.15); color: var(--green); }
+  .pill.warn { background: rgba(245,158,11,.15); color: var(--amber); }
+  main { padding: 16px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  section { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  section h2 { margin: 0 0 12px; font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; }
+  tr:last-child td { border-bottom: 0; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .row-muted { opacity: .45; }
+  .tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+  .tag.buy { background: rgba(34,197,94,.15); color: var(--green); }
+  .tag.sell { background: rgba(239,68,68,.15); color: var(--red); }
+  .tag.signal { background: rgba(59,130,246,.15); color: var(--blue); }
+  .tag.error { background: rgba(239,68,68,.2); color: var(--red); }
+  .tag.dry { background: rgba(245,158,11,.15); color: var(--amber); }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .title-cell { max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .empty { color: var(--muted); text-align: center; padding: 24px 0; }
+  .full-row { grid-column: 1 / -1; }
+  code { background: rgba(255,255,255,.05); padding: 1px 6px; border-radius: 3px; font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Polymarket Copy Trader <span id="mode-pill"></span></h1>
+  <div id="config" style="color: var(--muted); font-size: 12px;"></div>
+</header>
+<main>
+  <section>
+    <h2>Tracked wallets</h2>
+    <table>
+      <thead><tr><th>Label</th><th class="num">Win</th><th class="num">W/L markets</th><th class="num">PnL</th><th>Status</th></tr></thead>
+      <tbody id="wallets"><tr><td colspan="5" class="empty">loading...</td></tr></tbody>
+    </table>
+  </section>
+  <section>
+    <h2>Open copies</h2>
+    <table>
+      <thead><tr><th>Market</th><th>Source</th><th class="num">Size</th><th class="num">Entry</th><th>Opened</th></tr></thead>
+      <tbody id="copies"><tr><td colspan="5" class="empty">loading...</td></tr></tbody>
+    </table>
+  </section>
+  <section class="full-row">
+    <h2>Recent events</h2>
+    <table>
+      <thead><tr><th>Time</th><th>Kind</th><th>Wallet</th><th>Market</th><th class="num">Price</th><th class="num">Size</th><th class="num">Notional</th><th>Flags</th></tr></thead>
+      <tbody id="events"><tr><td colspan="8" class="empty">loading...</td></tr></tbody>
+    </table>
+  </section>
+</main>
+<script>
+const fmtTime = ts => new Date(ts).toLocaleString();
+const fmtNum = (n, d = 2) => (n == null ? "-" : Number(n).toFixed(d));
+const fmtUsd = n => n == null ? "-" : "$" + Number(n).toFixed(2);
+const shortAddr = a => a ? a.slice(0, 6) + "…" + a.slice(-4) : "";
+
+function renderConfig(cfg) {
+  document.getElementById("mode-pill").innerHTML = cfg.dryRun
+    ? `<span class="pill warn">DRY RUN</span>`
+    : `<span class="pill ok">LIVE</span>`;
+  document.getElementById("config").textContent =
+    `min win ${Math.round(cfg.minWinRate*100)}% · ${cfg.minSettledMarkets}+ markets · $${cfg.copyNotionalUsdc}/trade · max ${cfg.maxOpenPositions} open · poll ${Math.round(cfg.pollIntervalMs/1000)}s`;
+}
+
+function renderWallets(wallets) {
+  const tbody = document.getElementById("wallets");
+  if (!wallets.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty">No wallets. Run <code>npm run winrate</code>.</td></tr>`; return; }
+  tbody.innerHTML = wallets.map(w => {
+    const wr = w.winRate != null ? (w.winRate * 100).toFixed(1) + "%" : "-";
+    const status = w.tracked ? `<span class="pill ok">active</span>` : `<span class="pill warn">filtered</span>`;
+    return `<tr class="${w.tracked ? "" : "row-muted"}">
+      <td>${w.label ?? shortAddr(w.address)}</td>
+      <td class="num">${wr}</td>
+      <td class="num">${w.settledMarkets ?? "-"}</td>
+      <td class="num">${w.pnl != null ? fmtUsd(w.pnl) : "-"}</td>
+      <td>${status}</td>
+    </tr>`;
+  }).join("");
+}
+
+function renderCopies(copies) {
+  const tbody = document.getElementById("copies");
+  if (!copies.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty">No open copies.</td></tr>`; return; }
+  tbody.innerHTML = copies.map(c => `
+    <tr>
+      <td class="title-cell">${c.slug ? `<a href="https://polymarket.com/event/${c.slug}" target="_blank">${c.title ?? c.slug}</a>` : (c.title ?? c.conditionId.slice(0,10))}</td>
+      <td>${c.sourceLabel ?? shortAddr(c.sourceWallet)}</td>
+      <td class="num">${fmtNum(c.size)}</td>
+      <td class="num">${fmtNum(c.avgPrice, 3)}</td>
+      <td>${fmtTime(c.openedAt)}</td>
+    </tr>
+  `).join("");
+}
+
+function kindTag(ev) {
+  const tags = [`<span class="tag ${ev.kind}">${ev.kind.toUpperCase()}</span>`];
+  if (ev.dryRun) tags.push(`<span class="tag dry">DRY</span>`);
+  if (ev.copied && ev.kind !== "error") tags.push(`<span class="tag buy">copied</span>`);
+  return tags.join(" ");
+}
+
+function renderEvents(events) {
+  const tbody = document.getElementById("events");
+  if (!events.length) { tbody.innerHTML = `<tr><td colspan="8" class="empty">No events yet.</td></tr>`; return; }
+  tbody.innerHTML = events.map(e => `
+    <tr>
+      <td>${fmtTime(e.ts)}</td>
+      <td>${kindTag(e)}</td>
+      <td>${e.walletLabel ?? shortAddr(e.wallet)}</td>
+      <td class="title-cell">${e.slug ? `<a href="https://polymarket.com/event/${e.slug}" target="_blank">${e.title ?? e.slug}</a>` : (e.title ?? "-")}</td>
+      <td class="num">${fmtNum(e.price, 3)}</td>
+      <td class="num">${fmtNum(e.size)}</td>
+      <td class="num">${fmtUsd(e.notional)}</td>
+      <td>${e.error ? `<span class="tag error" title="${e.error}">error</span>` : (e.outcome ?? "")}</td>
+    </tr>
+  `).join("");
+}
+
+async function refresh() {
+  try {
+    const r = await fetch("/api/state");
+    const data = await r.json();
+    renderConfig(data.config);
+    renderWallets(data.wallets);
+    renderCopies(data.openCopies);
+    renderEvents(data.events);
+  } catch (err) {
+    console.error(err);
+  }
+}
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>

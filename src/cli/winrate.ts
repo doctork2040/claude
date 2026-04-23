@@ -100,8 +100,11 @@ async function main(): Promise<void> {
 
   const wallets: TrackedWallet[] = ranked.map((s) => ({
     address: s.address,
-    label: `${s.label ?? s.address.slice(0, 8)} (${(s.winRate * 100).toFixed(0)}% ${s.wins}W/${s.losses}L)`,
+    label: s.label ?? s.address.slice(0, 8),
     weight: 1,
+    winRate: Number(s.winRate.toFixed(4)),
+    settledMarkets: s.settledMarkets,
+    pnl: Math.round(s.pnl),
   }));
 
   const outPath = resolve(process.cwd(), out);

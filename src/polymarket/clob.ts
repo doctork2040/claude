@@ -63,3 +63,38 @@ export async function placeCopyBuy(
     tokenId: token.token_id,
   };
 }
+
+export interface CopySellRequest {
+  tokenId: string;
+  size: number;
+  minPrice: number;
+  tickSize?: number;
+}
+
+export async function placeCopySell(
+  client: ClobClient,
+  req: CopySellRequest,
+): Promise<PlacedOrder> {
+  const tick = req.tickSize ?? 0.01;
+  const limitPrice = roundToTick(Math.max(req.minPrice, tick), tick);
+
+  const signed = await client.createMarketOrder({
+    tokenID: req.tokenId,
+    amount: req.size,
+    price: limitPrice,
+    side: ClobSide.SELL,
+    orderType: OrderType.FOK,
+  });
+  const res = (await client.postOrder(signed, OrderType.FOK)) as {
+    orderID?: string;
+    orderHash?: string;
+    makingAmount?: string | number;
+  };
+  const filled = res.makingAmount != null ? Number(res.makingAmount) : req.size;
+  return {
+    orderId: String(res.orderID ?? res.orderHash ?? ""),
+    filled,
+    price: limitPrice,
+    tokenId: req.tokenId,
+  };
+}

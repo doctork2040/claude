@@ -8,15 +8,18 @@
     "research": "tsx src/cli/research.ts",
     "winrate": "tsx src/cli/winrate.ts",
     "watch": "tsx src/cli/watch.ts",
-    "trade": "tsx src/cli/trade.ts"
+    "trade": "tsx src/cli/trade.ts",
+    "dashboard": "tsx src/cli/dashboard.ts"
   },
   "dependencies": {
     "@polymarket/clob-client": "^4.15.0",
     "dotenv": "^16.4.5",
     "ethers": "^5.7.2",
+    "express": "^4.19.2",
     "undici": "^6.19.8"
   },
   "devDependencies": {
+    "@types/express": "^4.17.21",
     "@types/node": "^22.5.0",
     "tsx": "^4.19.0",
     "typescript": "^5.5.4"
