@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "research": "tsx src/cli/research.ts",
+    "winrate": "tsx src/cli/winrate.ts",
     "watch": "tsx src/cli/watch.ts",
     "trade": "tsx src/cli/trade.ts"
   },

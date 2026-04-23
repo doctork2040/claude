@@ -31,8 +31,13 @@ export async function fetchLeaderboard(opts: {
   }));
 }
 
-export async function fetchPositions(user: string): Promise<PolyPosition[]> {
-  const url = `${DATA_API}/positions?user=${user.toLowerCase()}&sizeThreshold=0.1`;
+export async function fetchPositions(
+  user: string,
+  opts: { sizeThreshold?: number; limit?: number } = {},
+): Promise<PolyPosition[]> {
+  const sizeThreshold = opts.sizeThreshold ?? 0.1;
+  const limit = opts.limit ?? 500;
+  const url = `${DATA_API}/positions?user=${user.toLowerCase()}&sizeThreshold=${sizeThreshold}&limit=${limit}`;
   const rows = await getJson<Array<Record<string, unknown>>>(url);
   return rows.map((r) => ({
     proxyWallet: String(r["proxyWallet"] ?? user).toLowerCase(),
