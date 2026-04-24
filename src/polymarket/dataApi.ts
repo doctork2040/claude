@@ -55,8 +55,12 @@ export async function fetchPositions(
   }));
 }
 
-export async function fetchTrades(user: string, limit = 50): Promise<PolyTrade[]> {
-  const url = `${DATA_API}/trades?user=${user.toLowerCase()}&limit=${limit}`;
+export async function fetchTrades(
+  user: string,
+  limit = 50,
+  offset = 0,
+): Promise<PolyTrade[]> {
+  const url = `${DATA_API}/trades?user=${user.toLowerCase()}&limit=${limit}&offset=${offset}`;
   const rows = await getJson<Array<Record<string, unknown>>>(url);
   return rows.map((r) => ({
     transactionHash: String(r["transactionHash"] ?? r["hash"] ?? ""),
@@ -72,4 +76,20 @@ export async function fetchTrades(user: string, limit = 50): Promise<PolyTrade[]
     title: r["title"] as string | undefined,
     slug: r["slug"] as string | undefined,
   }));
+}
+
+export async function fetchAllTrades(
+  user: string,
+  opts: { maxPages?: number; pageSize?: number } = {},
+): Promise<PolyTrade[]> {
+  const maxPages = opts.maxPages ?? 20;
+  const pageSize = opts.pageSize ?? 500;
+  const all: PolyTrade[] = [];
+  for (let page = 0; page < maxPages; page++) {
+    const batch = await fetchTrades(user, pageSize, page * pageSize);
+    if (!batch.length) break;
+    all.push(...batch);
+    if (batch.length < pageSize) break;
+  }
+  return all;
 }
