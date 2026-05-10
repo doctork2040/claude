@@ -100,10 +100,14 @@ benchmarker가 그 알고리즘을 proof-of-work로 실행하면서 가장 효�
     │   └── cur_approximation/
     │       ├── README.md
     │       └── benchmarker_outbound.rs
+    ├── logs/
+    │   └── submissions.md      # 제출 이력 / 아이디어 백로그
     └── scripts/
         ├── new_algorithm.sh    # 새 알고리즘 폴더 스캐폴딩
         ├── dev_shell.sh        # 공식 dev 이미지 컨테이너 진입
-        └── test_local.sh       # 로컬 테스트 헬퍼
+        ├── test_local.sh       # 로컬 테스트 헬퍼
+        ├── market_radar.sh     # challenge별 경쟁 강도 스냅샷 (TIG API)
+        └── my_status.sh        # 내 player의 알고리즘/보상 현황 (TIG API)
 ```
 
 ---
@@ -224,16 +228,58 @@ test_algorithm my_first_knap <difficulty>
 
 ---
 
-## 9. 다음 단계
+## 9. 지속적 운영 사이클
 
-1. `cp .env.example .env` 후 값 채우기
-2. 어떤 challenge로 시작할지 선택 (CPU만 가능하다면 satisfiability/knapsack/
-   vehicle_routing/job_scheduling/energy_arbitrage 추천)
-3. `./scripts/new_algorithm.sh <challenge> <name>`으로 스캐폴드
-4. `tig/tig-challenges/src/<challenge>/README.md`에서 문제 정의 정독
-5. `benchmarker_outbound.rs` 구현 → `./scripts/dev_shell.sh <challenge>`로
-   컨테이너 진입 후 `test_algorithm`으로 검증
-6. 충분히 결정적이고 baseline 대비 quality > 0이 안정적으로 나오면 제출
+토큰 채굴은 일회성 제출이 아니라 **반복 제출 + 시장 모니터링**입니다.
+다음 루틴을 권장합니다.
+
+### A. 초기 1회 (셋업)
+
+1. `cp .env.example .env` → `TIG_PLAYER_ADDRESS` 등 입력.
+2. play.tig.foundation에서 지갑 연결 + Base 체인에 $TIG 충분히 (≥ 10 TIG).
+3. `./scripts/market_radar.sh mainnet` — 현재 시장 스냅샷 확인.
+   - **codes 수가 적은 challenge** = 진입 시 한계 reward가 큼.
+   - 빈 challenge가 있다면 최우선 후보.
+
+### B. 매 알고리즘 사이클 (1~7일)
+
+1. `./scripts/market_radar.sh` 다시 돌려 타깃 challenge 결정.
+2. `./scripts/new_algorithm.sh <challenge> <name>` → 코드 작성.
+3. `tig/tig-challenges/src/<challenge>/README.md`에서 baseline 알고리즘 정독.
+4. `tig/tig-algorithms/src/<challenge>/`의 기존 제출들 훑기 (어떤
+   알고리즘 패밀리가 이미 있는지). 단순 모방은 금지 — 라이선스 호환
+   여부도 확인.
+5. `./scripts/dev_shell.sh <challenge>` → `test_algorithm <name> <difficulty>`로
+   결정성·quality > 0 확인. 여러 difficulty/seed로 분산 측정.
+6. 평균 quality가 baseline 대비 안정적으로 양수면 play.tig.foundation에서
+   제출 (10 $TIG 차감).
+7. `logs/submissions.md`에 한 줄 추가.
+
+### C. 모니터링 (매일~주간)
+
+- `./scripts/my_status.sh` — 내 알고리즘들의 현재 adoption / reward 확인.
+- `./scripts/market_radar.sh` — 새 경쟁 알고리즘 등장 여부 확인.
+- adoption이 떨어지는 알고리즘이 있다면 → 더 빠른/정확한 후속작 준비.
+
+### D. 장기 (Advance 제출 고려)
+
+알고리즘적 진보(novel method)를 청구할 만한 결과가 누적되면:
+
+1. `refs/NOTES.md`의 advance reward 섹션 참고.
+2. `tig/tig-algorithms/advances/<challenge>/template.md` 기반으로 문서화.
+3. `advances@tig.foundation`에 Subject `Advance Submission (<ADVANCE>)`로 발송
+   (250 $TIG deposit). 토큰 홀더 투표 결과에 따라 보상.
+
+### 한 번에 잊지 말 것
+
+- **결정성** — `seeded_hasher(challenge.seed)` / `SmallRng::from_seed(challenge.seed)`.
+  비결정적 결과는 runtime_signature 검증 실패 → reward 0.
+- **테스트 코드 금지** — `#[test]`, `#[cfg(test)]`가 파일에 있으면 거부됨.
+- **제출 후 수정 불가** — 충분한 difficulty 범위에서 검증 후 제출.
+- **OPoW parity** — benchmarker는 모든 challenge에 균등 분포해야 보상 최대.
+  내 알고리즘이 한 challenge에서만 압도적이어도 benchmarker가 다른
+  challenge 알고리즘과 함께 돌릴 때만 채택됨. **저변 challenge 진입이
+  종종 가장 효율적**.
 
 ---
 
