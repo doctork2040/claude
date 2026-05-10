@@ -10,7 +10,8 @@
     "backtest": "tsx src/cli/backtest.ts",
     "watch": "tsx src/cli/watch.ts",
     "trade": "tsx src/cli/trade.ts",
-    "dashboard": "tsx src/cli/dashboard.ts"
+    "dashboard": "tsx src/cli/dashboard.ts",
+    "late-arb": "tsx src/cli/late-arb.ts"
   },
   "dependencies": {
     "@polymarket/clob-client": "^4.15.0",

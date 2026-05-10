@@ -1,8 +1,59 @@
 import { ClobClient, Side as ClobSide, OrderType, Chain } from "@polymarket/clob-client";
 import { Wallet } from "ethers";
+import { request } from "undici";
 import type { MarketInfo } from "../types.js";
 
 const CLOB_HOST = "https://clob.polymarket.com";
+
+export interface OrderLevel {
+  price: number;
+  size: number;
+}
+
+export interface Orderbook {
+  tokenId: string;
+  bids: OrderLevel[];
+  asks: OrderLevel[];
+}
+
+export async function fetchOrderbook(tokenId: string): Promise<Orderbook | null> {
+  const res = await request(`${CLOB_HOST}/book?token_id=${tokenId}`);
+  if (res.statusCode >= 400) return null;
+  const raw = (await res.body.json()) as {
+    bids?: Array<{ price: string; size: string }>;
+    asks?: Array<{ price: string; size: string }>;
+  };
+  const toLevels = (rows: Array<{ price: string; size: string }> = []): OrderLevel[] =>
+    rows
+      .map((r) => ({ price: Number(r.price), size: Number(r.size) }))
+      .filter((l) => l.size > 0)
+      .sort((a, b) => a.price - b.price);
+  return {
+    tokenId,
+    bids: toLevels(raw.bids).reverse(),
+    asks: toLevels(raw.asks),
+  };
+}
+
+export async function fetchOrderbooksBatch(tokenIds: string[]): Promise<Map<string, Orderbook>> {
+  const result = new Map<string, Orderbook>();
+  const concurrency = 8;
+  let cursor = 0;
+  const workers = Array.from({ length: concurrency }, async () => {
+    while (cursor < tokenIds.length) {
+      const i = cursor++;
+      const id = tokenIds[i]!;
+      try {
+        const ob = await fetchOrderbook(id);
+        if (ob) result.set(id, ob);
+      } catch {
+        // skip failed
+      }
+    }
+  });
+  await Promise.all(workers);
+  return result;
+}
 
 export interface CopyOrderRequest {
   market: MarketInfo;
