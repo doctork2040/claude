@@ -9,6 +9,7 @@ export interface TrackedWallet {
   winRate?: number;
   settledMarkets?: number;
   pnl?: number;
+  lastTradeTs?: number;
 }
 
 export interface AppConfig {
