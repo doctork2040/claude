@@ -11,3 +11,5 @@ tig/
 tig-innovator/.env
 tig-innovator/build/
 tig-innovator/target/
+tig-innovator/harness/target/
+tig-innovator/harness/Cargo.lock

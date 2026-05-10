@@ -100,10 +100,19 @@ benchmarker가 그 알고리즘을 proof-of-work로 실행하면서 가장 효�
     │   └── cur_approximation/
     │       ├── README.md
     │       └── benchmarker_outbound.rs
+    ├── algorithms/             # 추적되는 canonical 알고리즘 코드
+    │   └── knapsack/
+    │       └── ironclad_swap/  # 첫 알고리즘 (로컬 검증 완료, 미제출)
+    │           ├── mod.rs
+    │           └── README.md
+    ├── harness/                # 로컬 채점 harness (별도 cargo 워크스페이스)
+    │   ├── Cargo.toml
+    │   └── src/main.rs
     ├── logs/
     │   └── submissions.md      # 제출 이력 / 아이디어 백로그
     └── scripts/
         ├── new_algorithm.sh    # 새 알고리즘 폴더 스캐폴딩
+        ├── sync_to_tig.sh      # algorithms/ → tig/ 심볼릭 링크 + mod.rs 등록
         ├── dev_shell.sh        # 공식 dev 이미지 컨테이너 진입
         ├── test_local.sh       # 로컬 테스트 헬퍼
         ├── market_radar.sh     # challenge별 경쟁 강도 스냅샷 (TIG API)
@@ -119,13 +128,18 @@ benchmarker가 그 알고리즘을 proof-of-work로 실행하면서 가장 효�
 ```bash
 # 사용법: ./scripts/new_algorithm.sh <challenge> <algorithm_name>
 ./scripts/new_algorithm.sh knapsack my_first_knap
+# 그 다음 algorithms/<challenge>/<algorithm_name>/로 옮기고 sync:
+mv tig/tig-algorithms/src/knapsack/my_first_knap \
+   tig-innovator/algorithms/knapsack/my_first_knap
+./scripts/sync_to_tig.sh
 ```
 
-이 스크립트는 다음을 수행합니다:
+권장 워크플로 (이미 `ironclad_swap`이 보여주는 패턴):
 
-- `tig/tig-algorithms/src/<challenge>/<algorithm_name>/` 생성
-- 같은 challenge의 `template.rs`, `template.md`을 복사 후 이름 치환
-- 구현 시작점 `benchmarker_outbound.rs`로 저장 (제출 시 사용되는 파일명)
+1. **canonical 위치는 `tig-innovator/algorithms/<challenge>/<name>/`** — git에 추적되어 tig/ 클론을 다시 받아도 사라지지 않음.
+2. **`./scripts/sync_to_tig.sh`**가 그 폴더를 `tig/tig-algorithms/src/<challenge>/<name>`로 심볼릭 링크하고 `mod.rs`에 `pub mod <name>;`을 자동 추가.
+3. **로컬 채점**: `tig-innovator/harness/`에서 `cargo run --release -- <n_items> <budget> <n_seeds>` — `tig_challenges` baseline 직접 호출.
+4. **제출 시점**에 `algorithms/<challenge>/<name>/` 폴더의 `.rs` 파일들 + `README.md`을 zip해서 play.tig.foundation에 업로드.
 
 ### 5.2. 알고리즘 시그니처
 
