@@ -2,6 +2,31 @@
   {
     "address": "0x56687bf447db6ffa42ffe2204a05edaa20f55839",
     "label": "Theo4",
-    "notes": "All-time #1 ($22M PnL). 2024 election whale; mostly inactive post-election. Verified by Polymarket as French finance trader, alongside Fredi9999/PrincessCaro/Michie."
+    "notes": "All-time #1 (~$22M PnL). 2024 US election whale. Polymarket-confirmed: French finance trader operating 4 linked accounts (Theo4/Fredi9999/PrincessCaro/Michie). Mostly inactive post-election - winrate filter will likely drop on staleness."
+  },
+  {
+    "address": "0x1f2dd6d473f3e824cd2f8a89d9c69fb96f6ad0cf",
+    "label": "Fredi9999",
+    "notes": "All-time #2 (~$16.6M PnL). Same operator as Theo4. 2024-election-driven; mostly inactive post-election."
+  },
+  {
+    "address": "0x8119010a6e589062aa03583bb3f39ca632d9f887",
+    "label": "PrincessCaro",
+    "notes": "All-time #9 (~$6M PnL). Same operator as Theo4. 2024-election-driven; mostly inactive post-election."
+  },
+  {
+    "address": "0xee613b3fc183ee44f9da9c05f53e2da107e3debf",
+    "label": "sovereign2013",
+    "notes": "All-time top-25 (~$3.5M PnL on ~$400M volume). Bot-score 67/100 - high notional throughput, low PnL/volume ratio suggests execution-style flow rather than directional alpha. Risky to copy size-for-size."
+  },
+  {
+    "address": "0x63ce342161250d705dc0b16df89036c8e5f9ba9a",
+    "label": "0x8dxd",
+    "notes": "$313 -> $550K+ in ~5 weeks (~98% win rate). 15-minute BTC/ETH/SOL up-down latency arb bot - reacts to Binance/Coinbase price moves before Polymarket odds catch up. ACTIVE. Hard to copy because edge decays in seconds; treat as signal source, not 1:1 copy."
+  },
+  {
+    "address": "0x006cc834cc092684f1b56626e23bedb3835c16ea",
+    "label": "rank17_4.5M",
+    "notes": "All-time top-20 (~$4.5M PnL, ~$60M holdings). Username not publicly documented. Listed on polymarketanalytics."
   }
 ]
