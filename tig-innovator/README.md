@@ -24,6 +24,30 @@ benchmarker가 그 알고리즘을 proof-of-work로 실행하면서 가장 효�
 
 ---
 
+## 1.5. 첨부 문건 요약 (refs/)
+
+`refs/` 폴더에 다음 두 PDF가 보관되어 있고, 운영 전략은 `refs/NOTES.md`로
+정리되어 있습니다.
+
+| 파일 | 무엇 |
+|------|------|
+| `refs/TIG_WP_2.2.1.pdf` | TIG Whitepaper v2.2.1. **OPoW 보상 공식**, parity 페널티, 라이선스 모델 |
+| `refs/cur_approximation.pdf` | **CUR Decomposition** challenge 초안 스펙 (TIG Labs, 2026-01) — 아직 미활성 |
+
+핵심 시사점:
+
+- Benchmarker 보상은 `R_i ∝ ⟨f̂⟩_i · exp(−k·CV_i² / (n−1))` 형태로 challenge간
+  parity가 깨지면 지수적으로 감쇠. → **모든 challenge에서 평균적으로 잘하는
+  것이 한 challenge 독식보다 유리**. Innovator는 경쟁이 적은(또는 신규)
+  challenge에서 한계 reward 기여가 큼.
+- CUR challenge가 곧 추가될 가능성이 있음. 활성화되기 전 알고리즘 설계를
+  미리 해두면 초기 진입 가능 → `drafts/cur_approximation/`에 스켈레톤
+  배치되어 있음.
+
+상세 분석은 [`refs/NOTES.md`](refs/NOTES.md) 참고.
+
+---
+
 ## 2. 현재 challenge 목록 (8개)
 
 | ID | Challenge | 분류 | 디바이스 |
@@ -68,6 +92,14 @@ benchmarker가 그 알고리즘을 proof-of-work로 실행하면서 가장 효�
 └── tig-innovator/              # 본 워크스페이스 (이 폴더)
     ├── README.md               # ← 이 파일
     ├── .env.example
+    ├── refs/                   # 첨부 PDF 원본 + 전략 노트
+    │   ├── TIG_WP_2.2.1.pdf
+    │   ├── cur_approximation.pdf
+    │   └── NOTES.md            # OPoW 보상 공식 / CUR 스펙 분석
+    ├── drafts/                 # 미활성 challenge 사전 작업
+    │   └── cur_approximation/
+    │       ├── README.md
+    │       └── benchmarker_outbound.rs
     └── scripts/
         ├── new_algorithm.sh    # 새 알고리즘 폴더 스캐폴딩
         ├── dev_shell.sh        # 공식 dev 이미지 컨테이너 진입
