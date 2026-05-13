@@ -5,3 +5,11 @@ dist/
 *.log
 .DS_Store
 data/state.json
+
+# TIG monorepo clone (separate upstream repo, not tracked here)
+tig/
+tig-innovator/.env
+tig-innovator/build/
+tig-innovator/target/
+tig-innovator/harness/target/
+tig-innovator/harness/Cargo.lock
