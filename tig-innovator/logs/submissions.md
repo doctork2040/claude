@@ -5,7 +5,10 @@
 | 일자 | challenge | algo_name | 상태 | tx hash | 시작 idea | 비고 |
 |------|-----------|-----------|------|---------|-----------|------|
 | 2026-05-13 | knapsack | ironclad_swap | **검증 완료, 제출 보류** | — | tabu seed pass + steepest-ascent + deterministic kick | 정확성 OK·LOSS 0, but 경쟁자 3종(fast_and_fun, knap_supreme, knap_quality_opt) 대비 평균 quality 약 1/10. 강화 후 재평가 권장 |
-| 2026-05-13 | energy_arbitrage | optigrid_v1 | **검증 완료, 제출 준비됨 🟢** | — | RT×DA 가격 fusion + per-battery + degradation-aware soft sizing + PTDF feasibility | 40/40 wins vs baseline (max of greedy+conservative). 평균 quality +1087%, 최저 +12.77%. 모든 scenario에서 압도. **활성 경쟁자 0개 — green field**. 채택 확률 매우 높음 |
+| 2026-05-13 | energy_arbitrage | optigrid_v1 | superseded by v4 | — | RT×DA 평균 비교 + soft sizing | 40/40 wins, avg q +1087%. v4의 sub-policy로 통합됨 |
+| 2026-05-13 | energy_arbitrage | optigrid_v2 | superseded by v4 | — | round-trip economics + future-best + closed-form | 40/40 wins, avg q +1237%. v4의 sub-policy로 통합됨 |
+| 2026-05-13 | energy_arbitrage | optigrid_v3 | superseded by v4 | — | future-best lookahead + soft sizing | 40/40 wins, avg q +1280%. v4의 sub-policy로 통합됨 |
+| 2026-05-13 | energy_arbitrage | **optigrid_v4** | **🟢 채택용 최종 — 제출 준비됨** | — | size-adaptive ensemble dispatching to v1/v2/v3 by num_batteries | **80/80 wins vs baseline**, **63/80 (79%) top-of-field**, avg q **+1318%**. 모든 scenario에서 baseline 압도, 결정성 검증, self-contained single file. 활성 경쟁자 0개 |
 
 ### energy_arbitrage / optigrid_v1 — 채택 가능성 매우 높음
 
