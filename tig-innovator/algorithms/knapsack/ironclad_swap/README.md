@@ -49,17 +49,39 @@ the **Quadratic Knapsack** challenge:
 Reference baseline: `tig_challenges::knapsack::baselines::tabu_search`
 (100-iteration tabu local search, `compute_greedy_baseline`).
 
+### Stability vs baseline (after the tabu_seed_pass fix)
+
 | n_items | budget | seeds | wins | ties | losses | avg Δ |
 |---------|--------|-------|------|------|--------|-------|
-| 50      | 50%    | 5     | 1    | 4    | 0      | +2.0  |
-| 200     | 50%    | 5     | 1    | 4    | 0      | +5.6  |
-| 500     | 50%    | 3     | 1    | 2    | 0      | +44.0 |
+| 100     | 30%    | 10    | 4    | 6    | 0      | +5.3  |
+| 100     | 50%    | 10    | 5    | 5    | 0      | +8.4  |
+| 300     | 30%    | 10    | 3    | 7    | 0      | +6.8  |
+| 500     | 30%    | 10    | 4    | 6    | 0      | +6.6  |
+| 500     | 50%    | 10    | 1    | 9    | 0      | +13.2 |
+| 1000    | 30%    | 10    | 3    | 7    | 0      | +10.9 |
+| 1000    | 70%    | 10    | 1    | 9    | 0      | +4.0  |
 
-Never below baseline; quality ≥ 0 stable. Reproduce with:
+Never below baseline; quality ≥ 0 stable.
+
+### Honest competitive ranking (n=300, budget=50%, 10 seeds)
+
+| Algorithm | avg Δ vs baseline | wins/10 |
+|-----------|-------------------|---------|
+| **ironclad_swap (this)** | **+4.8** | **2** |
+| fast_and_fun | +63.0 | 10 |
+| knap_supreme | +50.7 | 9 |
+| knap_quality_opt | +66.5 | 10 |
+
+Currently below the existing competitors by an order of magnitude.
+This algorithm is **safe** (never worse than baseline) but **not yet
+strong enough for adoption**. See `tig-innovator/logs/submissions.md`
+for the iteration roadmap.
+
+Reproduce with:
 
 ```bash
 cd tig-innovator/harness
-cargo run --release -- 200 50 5
+cargo run --release -- 300 50 10
 ```
 
 ## References

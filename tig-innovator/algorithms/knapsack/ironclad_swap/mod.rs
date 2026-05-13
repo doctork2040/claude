@@ -90,6 +90,23 @@ pub fn solve_challenge(
         }
     }
 
+    // ---- 2.5. Baseline-equivalent pass (tabu-flavoured 1-1 swap, 100 iters) ----
+    // Guarantees the trajectory passes through the same local optimum as the
+    // tabu_search baseline. Without this, pure steepest-ascent can settle in
+    // a *different* (occasionally worse) basin than tabu, even from the same
+    // greedy start.
+    tabu_seed_pass(
+        n,
+        weights,
+        interactions,
+        max_weight,
+        &mut is_selected,
+        &mut selected,
+        &mut total_weight,
+        &mut interaction_sum,
+        100,
+    );
+
     // Save initial solution as a baseline guard.
     let mut best_items = selected.clone();
     save_solution(&Solution { items: best_items.clone() })?;
@@ -275,6 +292,70 @@ fn apply_swap(
     is_selected[in_item] = true;
     selected.push(in_item);
     *total_weight += weights[in_item];
+}
+
+// Faithful re-implementation of the official tabu_search baseline's inner
+// loop, operating on our incrementally-maintained `interaction_sum` cache.
+// Decision logic (best improving 1-1 swap, tabu_list = 3, strictly positive
+// improvement) matches `tig_challenges::knapsack::baselines::tabu_search`
+// exactly, so the result is identical to (or, with more iterations, no
+// worse than) the published baseline.
+fn tabu_seed_pass(
+    n: usize,
+    weights: &[u32],
+    interactions: &[Vec<i32>],
+    max_weight: u32,
+    is_selected: &mut [bool],
+    selected: &mut Vec<usize>,
+    total_weight: &mut u32,
+    interaction_sum: &mut [i64],
+    max_iterations: usize,
+) {
+    let mut tabu = vec![0u32; n];
+    for _ in 0..max_iterations {
+        let mut best_imp: i64 = 0;
+        let mut best_in: Option<usize> = None;
+        let mut best_out: Option<usize> = None;
+        let slack: i64 = max_weight as i64 - *total_weight as i64;
+
+        for in_item in 0..n {
+            if is_selected[in_item] || tabu[in_item] > 0 {
+                continue;
+            }
+            for &out in selected.iter() {
+                if tabu[out] > 0 {
+                    continue;
+                }
+                let dw = weights[in_item] as i64 - weights[out] as i64;
+                if dw > slack {
+                    continue;
+                }
+                let delta = interaction_sum[in_item]
+                    - interaction_sum[out]
+                    - interactions[in_item][out] as i64;
+                if delta > best_imp {
+                    best_imp = delta;
+                    best_in = Some(in_item);
+                    best_out = Some(out);
+                }
+            }
+        }
+
+        match (best_in, best_out) {
+            (Some(in_item), Some(out)) => {
+                apply_swap(
+                    interactions, weights, in_item, Some(out),
+                    is_selected, selected, total_weight, interaction_sum,
+                );
+                tabu[in_item] = 3;
+                tabu[out] = 3;
+            }
+            _ => break,
+        }
+        for t in tabu.iter_mut() {
+            if *t > 0 { *t -= 1; }
+        }
+    }
 }
 
 fn kick(
