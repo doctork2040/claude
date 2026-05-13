@@ -5,8 +5,20 @@
 | 일자 | challenge | algo_name | 상태 | tx hash | 시작 idea | 비고 |
 |------|-----------|-----------|------|---------|-----------|------|
 | 2026-05-13 | knapsack | ironclad_swap | **검증 완료, 제출 보류** | — | tabu seed pass + steepest-ascent + deterministic kick | 정확성 OK·LOSS 0, but 경쟁자 3종(fast_and_fun, knap_supreme, knap_quality_opt) 대비 평균 quality 약 1/10. 강화 후 재평가 권장 |
+| 2026-05-13 | energy_arbitrage | optigrid_v1 | **검증 완료, 제출 준비됨 🟢** | — | RT×DA 가격 fusion + per-battery + degradation-aware soft sizing + PTDF feasibility | 40/40 wins vs baseline (max of greedy+conservative). 평균 quality +1087%, 최저 +12.77%. 모든 scenario에서 압도. **활성 경쟁자 0개 — green field**. 채택 확률 매우 높음 |
 
-### 경쟁 비교 (n=300, budget=50%, 10 seeds)
+### energy_arbitrage / optigrid_v1 — 채택 가능성 매우 높음
+
+- 활성 경쟁 알고리즘 **0개** (모든 c008_aXXX 슬롯 비어있음)
+- 8 seeds × 5 scenarios = **40/40 wins**, 0 ties, 0 losses
+- Worst-case quality **+12.77%**, average **+1087%** (대부분 +10× clamp까지 도달)
+- 결정적 (재실행해도 byte-identical)
+- CAPSTONE (가장 큰 scenario, 100 batteries × 192 steps × 150 nodes)에서도 안정적
+- 다음 단계: 지갑 + $TIG 충전 후 play.tig.foundation 제출
+
+### knapsack / ironclad_swap — 채택 어려움 (현재 상태)
+
+경쟁 비교 (n=300, budget=50%, 10 seeds)
 
 | 알고리즘 | Δ-avg vs baseline | wins/10 |
 |----------|-------------------|---------|
